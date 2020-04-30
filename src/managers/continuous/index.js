@@ -1,8 +1,8 @@
-import {extend, defer, requestAnimationFrame} from "../../utils/core";
+import debounce from "lodash/debounce";
+import { EVENTS } from "../../utils/constants";
+import { defer, extend, requestAnimationFrame } from "../../utils/core";
 import DefaultViewManager from "../default";
 import Snap from "../helpers/snap";
-import { EVENTS } from "../../utils/constants";
-import debounce from "lodash/debounce";
 
 class ContinuousViewManager extends DefaultViewManager {
 	constructor(options) {
@@ -283,7 +283,7 @@ class ContinuousViewManager extends DefaultViewManager {
 		}
 
 		let promises = newViews.map((view) => {
-			return view.displayed;
+			return view.display(this.request);
 		});
 
 		if(newViews.length){
