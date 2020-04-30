@@ -1,9 +1,9 @@
 import EventEmitter from "event-emitter";
-import {extend, borders, uuid, isNumber, bounds, defer, createBlobUrl, revokeBlobUrl} from "../../utils/core";
-import EpubCFI from "../../epubcfi";
+import { Highlight, Pane, Underline } from "marks-pane";
 import Contents from "../../contents";
+import EpubCFI from "../../epubcfi";
 import { EVENTS } from "../../utils/constants";
-import { Pane, Highlight, Underline } from "marks-pane";
+import { borders, bounds, createBlobUrl, defer, extend, isNumber, revokeBlobUrl, uuid } from "../../utils/core";
 
 class IframeView {
 	constructor(section, options) {
@@ -528,7 +528,7 @@ class IframeView {
 		return {
 			top: this.element.offsetTop,
 			left: this.element.offsetLeft
-		}
+		};
 	}
 
 	width() {
@@ -593,11 +593,11 @@ class IframeView {
 
 		h.element.setAttribute("ref", className);
 		h.element.addEventListener("click", emitter);
-		h.element.addEventListener("touchstart", emitter);
+		h.element.addEventListener("touchstart", emitter, { passive: true });
 
 		if (cb) {
 			h.element.addEventListener("click", cb);
-			h.element.addEventListener("touchstart", cb);
+			h.element.addEventListener("touchstart", cb, { passive: true });
 		}
 		return h;
 	}
@@ -730,7 +730,7 @@ class IframeView {
 				if (l) {
 					item.element.removeEventListener("click", l);
 					item.element.removeEventListener("touchstart", l);
-				};
+				}
 			});
 			delete this.highlights[cfiRange];
 		}
@@ -745,7 +745,7 @@ class IframeView {
 				if (l) {
 					item.element.removeEventListener("click", l);
 					item.element.removeEventListener("touchstart", l);
-				};
+				}
 			});
 			delete this.underlines[cfiRange];
 		}
@@ -760,7 +760,7 @@ class IframeView {
 				if (l) {
 					item.element.removeEventListener("click", l);
 					item.element.removeEventListener("touchstart", l);
-				};
+				}
 			});
 			delete this.marks[cfiRange];
 		}
