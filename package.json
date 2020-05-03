@@ -76,10 +76,8 @@
     "webpack-dev-server": "^2.11.2"
   },
   "dependencies": {
-    "@types/jszip": "^3.1.4",
     "@types/localforage": "0.0.34",
     "event-emitter": "^0.3.5",
-    "jszip": "^3.1.5",
     "localforage": "^1.7.2",
     "lodash": "^4.17.10",
     "marks-pane": "^1.0.9",
