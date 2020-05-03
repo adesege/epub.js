@@ -1,23 +1,20 @@
 import EventEmitter from "event-emitter";
-import {extend, defer} from "./utils/core";
-import Url from "./utils/url";
-import Path from "./utils/path";
-import Spine from "./spine";
+import DisplayOptions from "./displayoptions";
+import EpubCFI from "./epubcfi";
 import Locations from "./locations";
-import Container from "./container";
-import Packaging from "./packaging";
 import Navigation from "./navigation";
-import Resources from "./resources";
+import Packaging from "./packaging";
 import PageList from "./pagelist";
 import Rendition from "./rendition";
-import Archive from "./archive";
-import request from "./utils/request";
-import EpubCFI from "./epubcfi";
+import Resources from "./resources";
+import Spine from "./spine";
 import Store from "./store";
-import DisplayOptions from "./displayoptions";
 import { EPUBJS_VERSION, EVENTS } from "./utils/constants";
+import { defer, extend } from "./utils/core";
+import Path from "./utils/path";
+import request from "./utils/request";
+import Url from "./utils/url";
 
-const CONTAINER_PATH = "META-INF/container.xml";
 const IBOOKS_DISPLAY_OPTIONS_PATH = "META-INF/com.apple.ibooks.display-options.xml";
 
 const INPUT_TYPE = {
@@ -203,13 +200,6 @@ class Book {
 		this.rendition = undefined;
 
 		/**
-		 * @member {Container} container
-		 * @memberof Book
-		 * @private
-		 */
-		this.container = undefined;
-
-		/**
 		 * @member {Packaging} packaging
 		 * @memberof Book
 		 * @private
@@ -247,63 +237,12 @@ class Book {
 		var opening;
 		var type = what || this.determineType(input);
 
-		if (type === INPUT_TYPE.BINARY) {
-			this.archived = true;
-			this.url = new Url("/", "");
-			opening = this.openEpub(input);
-		} else if (type === INPUT_TYPE.BASE64) {
-			this.archived = true;
-			this.url = new Url("/", "");
-			opening = this.openEpub(input, type);
-		} else if (type === INPUT_TYPE.EPUB) {
-			this.archived = true;
-			this.url = new Url("/", "");
-			opening = this.request(input, "binary", this.settings.requestCredentials)
-				.then(this.openEpub.bind(this));
-		} else if(type == INPUT_TYPE.OPF) {
+		if(type == INPUT_TYPE.OPF) {
 			this.url = new Url(input);
 			opening = this.openPackaging(this.url.Path.toString());
-		} else if(type == INPUT_TYPE.MANIFEST) {
-			this.url = new Url(input);
-			opening = this.openManifest(this.url.Path.toString());
-		} else {
-			this.url = new Url(input);
-			opening = this.openContainer(CONTAINER_PATH)
-				.then(this.openPackaging.bind(this));
 		}
 
 		return opening;
-	}
-
-	/**
-	 * Open an archived epub
-	 * @private
-	 * @param  {binary} data
-	 * @param  {string} [encoding]
-	 * @return {Promise}
-	 */
-	openEpub(data, encoding) {
-		return this.unarchive(data, encoding || this.settings.encoding)
-			.then(() => {
-				return this.openContainer(CONTAINER_PATH);
-			})
-			.then((packagePath) => {
-				return this.openPackaging(packagePath);
-			});
-	}
-
-	/**
-	 * Open the epub container
-	 * @private
-	 * @param  {string} url
-	 * @return {string} packagePath
-	 */
-	openContainer(url) {
-		return this.load(url)
-			.then((xml) => {
-				this.container = new Container(xml);
-				return this.resolve(this.container.packagePath);
-			});
 	}
 
 	/**
@@ -317,22 +256,6 @@ class Book {
 		return this.load(url)
 			.then((xml) => {
 				this.packaging = new Packaging(xml);
-				return this.unpack(this.packaging);
-			});
-	}
-
-	/**
-	 * Open the manifest JSON
-	 * @private
-	 * @param  {string} url
-	 * @return {Promise}
-	 */
-	openManifest(url) {
-		this.path = new Path(url);
-		return this.load(url)
-			.then((json) => {
-				this.packaging = new Packaging();
-				this.packaging.load(json);
 				return this.unpack(this.packaging);
 			});
 	}
@@ -496,9 +419,9 @@ class Book {
 					this.opening.resolve(this);
 				});
 			})
-			.catch((err) => {
-				console.error(err);
-			});
+				.catch((err) => {
+					console.error(err);
+				});
 		} else {
 			// Resolve book opened promise
 			this.loaded.displayOptions.then(() => {
@@ -584,18 +507,6 @@ class Book {
 	 */
 	setRequestHeaders(headers) {
 		this.settings.requestHeaders = headers;
-	}
-
-	/**
-	 * Unarchive a zipped epub
-	 * @private
-	 * @param  {binary} input epub data
-	 * @param  {string} [encoding]
-	 * @return {Archive}
-	 */
-	unarchive(input, encoding) {
-		this.archive = new Archive();
-		return this.archive.open(input, encoding);
 	}
 
 	/**
@@ -734,7 +645,6 @@ class Book {
 		this.pageList && this.pageList.destroy();
 		this.archive && this.archive.destroy();
 		this.resources && this.resources.destroy();
-		this.container && this.container.destroy();
 		this.packaging && this.packaging.destroy();
 		this.rendition && this.rendition.destroy();
 		this.displayOptions && this.displayOptions.destroy();
@@ -744,7 +654,6 @@ class Book {
 		this.pageList = undefined;
 		this.archive = undefined;
 		this.resources = undefined;
-		this.container = undefined;
 		this.packaging = undefined;
 		this.rendition = undefined;
 
