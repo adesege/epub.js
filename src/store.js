@@ -37,11 +37,7 @@ class Store {
 	 */
 	checkRequirements() {
 		try {
-			let store;
-			if (typeof localforage === "undefined") {
-				store = localforage;
-			}
-			this.storage = store.createInstance({
+			this.storage = localforage.createInstance({
 				name: this.name
 			});
 		} catch (e) {
