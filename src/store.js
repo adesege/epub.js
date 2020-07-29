@@ -1,4 +1,5 @@
 import EventEmitter from "event-emitter";
+import localforage from "localforage";
 import mime from "../libs/mime/mime";
 import { defer, isXml, parse } from "./utils/core";
 import Path from "./utils/path";
@@ -34,12 +35,10 @@ class Store {
 	 * Requires localForage if it isn't there
 	 * @private
 	 */
-	checkRequirements(){
+	checkRequirements() {
 		try {
 			let store;
 			if (typeof localforage === "undefined") {
-				store = require("localforage");
-			} else {
 				store = localforage;
 			}
 			this.storage = store.createInstance({
@@ -56,8 +55,8 @@ class Store {
 	 */
 	addListeners() {
 		this._status = this.status.bind(this);
-		window.addEventListener("online",  this._status);
-	  window.addEventListener("offline", this._status);
+		window.addEventListener("online", this._status);
+		window.addEventListener("offline", this._status);
 	}
 
 	/**
@@ -65,8 +64,8 @@ class Store {
 	 * @private
 	 */
 	removeListeners() {
-		window.removeEventListener("online",  this._status);
-	  window.removeEventListener("offline", this._status);
+		window.removeEventListener("online", this._status);
+		window.removeEventListener("offline", this._status);
 		this._status = undefined;
 	}
 
@@ -101,7 +100,7 @@ class Store {
 					return this.requester(url, "binary")
 						.then((data) => {
 							return this.storage.setItem(encodedUrl, data);
-						}).catch(() => {});
+						}).catch(() => { });
 				} else {
 					return item;
 				}
@@ -139,7 +138,7 @@ class Store {
 	 * @param  {object} [headers]
 	 * @return {Promise<Blob | string | JSON | Document | XMLDocument>}
 	 */
-	request(url, type, withCredentials, headers){
+	request(url, type, withCredentials, headers) {
 		if (this.online) {
 			// From network
 			return this.requester(url, type, withCredentials, headers).then((data) => {
@@ -166,11 +165,11 @@ class Store {
 		var path = new Path(url);
 
 		// If type isn't set, determine it from the file extension
-		if(!type) {
+		if (!type) {
 			type = path.extension;
 		}
 
-		if(type == "blob"){
+		if (type == "blob") {
 			response = this.getBlob(url);
 		} else {
 			response = this.getText(url);
@@ -185,8 +184,8 @@ class Store {
 				deferred.resolve(result);
 			} else {
 				deferred.reject({
-					message : "File not found in storage: " + url,
-					stack : new Error().stack
+					message: "File not found in storage: " + url,
+					stack: new Error().stack
 				});
 			}
 			return deferred.promise;
@@ -200,26 +199,26 @@ class Store {
 	 * @param  {string} [type]
 	 * @return {any} the parsed result
 	 */
-	handleResponse(response, type){
+	handleResponse(response, type) {
 		var r;
 
-		if(type == "json") {
+		if (type == "json") {
 			r = JSON.parse(response);
 		}
 		else
-		if(isXml(type)) {
-			r = parse(response, "text/xml");
-		}
-		else
-		if(type == "xhtml") {
-			r = parse(response, "application/xhtml+xml");
-		}
-		else
-		if(type == "html" || type == "htm") {
-			r = parse(response, "text/html");
-		 } else {
-			 r = response;
-		 }
+			if (isXml(type)) {
+				r = parse(response, "text/xml");
+			}
+			else
+				if (type == "xhtml") {
+					r = parse(response, "application/xhtml+xml");
+				}
+				else
+					if (type == "html" || type == "htm") {
+						r = parse(response, "text/html");
+					} else {
+						r = response;
+					}
 
 		return r;
 	}
@@ -230,15 +229,15 @@ class Store {
 	 * @param  {string} [mimeType]
 	 * @return {Blob}
 	 */
-	getBlob(url, mimeType){
+	getBlob(url, mimeType) {
 		let encodedUrl = window.encodeURIComponent(url);
 
-		return this.storage.getItem(encodedUrl).then(function(uint8array) {
-			if(!uint8array) return;
+		return this.storage.getItem(encodedUrl).then(function (uint8array) {
+			if (!uint8array) return;
 
 			mimeType = mimeType || mime.lookup(url);
 
-			return new Blob([uint8array], {type : mimeType});
+			return new Blob([uint8array], { type: mimeType });
 		});
 
 	}
@@ -249,19 +248,19 @@ class Store {
 	 * @param  {string} [mimeType]
 	 * @return {string}
 	 */
-	getText(url, mimeType){
+	getText(url, mimeType) {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
 
-		return this.storage.getItem(encodedUrl).then(function(uint8array) {
+		return this.storage.getItem(encodedUrl).then(function (uint8array) {
 			var deferred = new defer();
 			var reader = new FileReader();
 			var blob;
 
-			if(!uint8array) return;
+			if (!uint8array) return;
 
-			blob = new Blob([uint8array], {type : mimeType});
+			blob = new Blob([uint8array], { type: mimeType });
 
 			reader.addEventListener("loadend", () => {
 				deferred.resolve(reader.result);
@@ -279,7 +278,7 @@ class Store {
 	 * @param  {string} [mimeType]
 	 * @return {string} base64 encoded
 	 */
-	getBase64(url, mimeType){
+	getBase64(url, mimeType) {
 		let encodedUrl = window.encodeURIComponent(url);
 
 		mimeType = mimeType || mime.lookup(url);
@@ -289,9 +288,9 @@ class Store {
 			var reader = new FileReader();
 			var blob;
 
-			if(!uint8array) return;
+			if (!uint8array) return;
 
-			blob = new Blob([uint8array], {type : mimeType});
+			blob = new Blob([uint8array], { type: mimeType });
 
 			reader.addEventListener("loadend", () => {
 				deferred.resolve(reader.result);
@@ -308,14 +307,14 @@ class Store {
 	 * @param  {object} [options.base64] use base64 encoding or blob url
 	 * @return {Promise} url promise with Url string
 	 */
-	createUrl(url, options){
+	createUrl(url, options) {
 		var deferred = new defer();
 		var _URL = window.URL || window.webkitURL || window.mozURL;
 		var tempUrl;
 		var response;
 		var useBase64 = options && options.base64;
 
-		if(url in this.urlCache) {
+		if (url in this.urlCache) {
 			deferred.resolve(this.urlCache[url]);
 			return deferred.promise;
 		}
@@ -324,7 +323,7 @@ class Store {
 			response = this.getBase64(url);
 
 			if (response) {
-				response.then(function(tempUrl) {
+				response.then(function (tempUrl) {
 
 					this.urlCache[url] = tempUrl;
 					deferred.resolve(tempUrl);
@@ -338,7 +337,7 @@ class Store {
 			response = this.getBlob(url);
 
 			if (response) {
-				response.then(function(blob) {
+				response.then(function (blob) {
 
 					tempUrl = _URL.createObjectURL(blob);
 					this.urlCache[url] = tempUrl;
@@ -352,8 +351,8 @@ class Store {
 
 		if (!response) {
 			deferred.reject({
-				message : "File not found in storage: " + url,
-				stack : new Error().stack
+				message: "File not found in storage: " + url,
+				stack: new Error().stack
 			});
 		}
 
@@ -364,10 +363,10 @@ class Store {
 	 * Revoke Temp Url for a achive item
 	 * @param  {string} url url of the item in the store
 	 */
-	revokeUrl(url){
+	revokeUrl(url) {
 		var _URL = window.URL || window.webkitURL || window.mozURL;
 		var fromCache = this.urlCache[url];
-		if(fromCache) _URL.revokeObjectURL(fromCache);
+		if (fromCache) _URL.revokeObjectURL(fromCache);
 	}
 
 	destroy() {

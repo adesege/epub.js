@@ -47,9 +47,10 @@ const INPUT_TYPE = {
 class Book {
 	constructor(url, options) {
 		// Allow passing just options to the Book
-		if (typeof(options) === "undefined" &&
-			  typeof(url) !== "string" &&
-		    url instanceof Blob === false) {
+		if (typeof (options) === "undefined" &&
+			typeof (url) !== "string" &&
+			url instanceof Blob === false &&
+			url instanceof ArrayBuffer === false) {
 			options = url;
 			url = undefined;
 		}
@@ -218,9 +219,9 @@ class Book {
 			this.store(this.settings.store);
 		}
 
-		if(url) {
+		if (url) {
 			this.open(url, this.settings.openAs).catch((error) => {
-				var err = new Error("Cannot load book at "+ url );
+				var err = new Error("Cannot load book at " + url);
 				this.emit(EVENTS.BOOK.OPEN_FAILED, err);
 			});
 		}
@@ -237,7 +238,7 @@ class Book {
 		var opening;
 		var type = what || this.determineType(input);
 
-		if(type == INPUT_TYPE.OPF) {
+		if (type == INPUT_TYPE.OPF) {
 			this.url = new Url(input);
 			opening = this.openPackaging(this.url.Path.toString());
 		}
@@ -267,7 +268,7 @@ class Book {
 	 */
 	load(path) {
 		var resolved = this.resolve(path);
-		if(this.archived) {
+		if (this.archived) {
 			return this.archive.request(resolved);
 		} else {
 			return this.request(resolved, null, this.settings.requestCredentials, this.settings.requestHeaders);
@@ -295,7 +296,7 @@ class Book {
 			resolved = this.path.resolve(path);
 		}
 
-		if(absolute != false && this.url) {
+		if (absolute != false && this.url) {
 			resolved = this.url.resolve(resolved);
 		}
 
@@ -338,7 +339,7 @@ class Book {
 			return INPUT_TYPE.BASE64;
 		}
 
-		if(typeof(input) != "string") {
+		if (typeof (input) != "string") {
 			return INPUT_TYPE.BINARY;
 		}
 
@@ -346,19 +347,24 @@ class Book {
 		path = url.path();
 		extension = path.extension;
 
+		// If there's a search string, remove it before determining type
+		if (extension) {
+			extension = extension.replace(/\?.*$/, "");
+		}
+
 		if (!extension) {
 			return INPUT_TYPE.DIRECTORY;
 		}
 
-		if(extension === "epub"){
+		if (extension === "epub") {
 			return INPUT_TYPE.EPUB;
 		}
 
-		if(extension === "opf"){
+		if (extension === "opf") {
 			return INPUT_TYPE.OPF;
 		}
 
-		if(extension === "json"){
+		if (extension === "json") {
 			return INPUT_TYPE.MANIFEST;
 		}
 	}
@@ -413,7 +419,7 @@ class Book {
 
 		this.isOpen = true;
 
-		if(this.archived || this.settings.replacements && this.settings.replacements != "none") {
+		if (this.archived || this.settings.replacements && this.settings.replacements != "none") {
 			this.replacements().then(() => {
 				this.loaded.displayOptions.then(() => {
 					this.opening.resolve(this);
@@ -566,20 +572,20 @@ class Book {
 
 	/**
 	 * Get the cover url
-	 * @return {string} coverUrl
+	 * @return {Promise<?string>} coverUrl
 	 */
 	coverUrl() {
-		var retrieved = this.loaded.cover.
-			then((url) => {
-				if(this.archived) {
-					// return this.archive.createUrl(this.cover);
-					return this.resources.get(this.cover);
-				}else{
-					return this.cover;
-				}
-			});
+		return this.loaded.cover.then(() => {
+			if (!this.cover) {
+				return null;
+			}
 
-		return retrieved;
+			if (this.archived) {
+				return this.archive.createUrl(this.cover);
+			} else {
+				return this.cover;
+			}
+		});
 	}
 
 	/**
